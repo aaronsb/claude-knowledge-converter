@@ -203,6 +203,18 @@ The converted output is perfect for Obsidian:
 3. Enable the Graph View to see your knowledge network
 4. Use the conversation tags to find all messages from a specific conversation
 
+### Enhanced with Obsidian MCP Plugin
+
+For an even more powerful experience, pair this converter with the [Obsidian MCP Plugin](https://github.com/aaronsb/obsidian-mcp-plugin):
+
+The MCP (Model Context Protocol) plugin allows Claude to directly interact with your converted knowledge base:
+- **Read and search** through your conversation history
+- **Create new notes** that reference past conversations
+- **Update existing notes** with insights from your Claude history
+- **Build connections** between different conversations and topics
+
+Together, these tools create a living knowledge system where your past conversations with Claude become an active, queryable resource for future interactions.
+
 ### Customizing the Conversion
 
 You can modify `src/convert_enhanced.py` to:
