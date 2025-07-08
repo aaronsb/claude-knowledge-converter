@@ -788,15 +788,21 @@ def main():
     print("Generating Obsidian graph configuration...")
     print("="*60)
     
-    # Interactive water level adjustment
-    water_level = tag_analyzer.interactive_water_level_adjustment()
+    # Scan all markdown files for complete tag analysis
+    tag_analyzer.scan_markdown_files_for_tags(output_base)
     
-    # Generate Obsidian config files
-    print("\nCreating Obsidian configuration...")
-    tag_analyzer.create_obsidian_config(output_base, water_level)
+    # Interactive water level adjustment for both tags and file patterns
+    tag_water_level, file_water_level, tag_color_scheme, file_color_scheme = tag_analyzer.interactive_water_level_adjustment()
+    
+    # Generate Obsidian config files with dual grouping
+    print("\nCreating Obsidian configuration with dual-layer grouping...")
+    print(f"Using {tag_color_scheme} colors for tags and {file_color_scheme} colors for file patterns")
+    tag_analyzer.create_obsidian_config(output_base, tag_water_level, file_water_level, 
+                                      tag_color_scheme, file_color_scheme)
     
     # Save analysis report
-    report_file = tag_analyzer.save_analysis_report(output_base, water_level)
+    report_file = tag_analyzer.save_analysis_report(output_base, tag_water_level, file_water_level,
+                                                   tag_color_scheme, file_color_scheme)
     print(f"Tag analysis report saved to: {report_file}")
     
     print("\n" + "="*60)
