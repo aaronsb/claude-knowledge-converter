@@ -666,6 +666,9 @@ class TagAnalyzer:
         print("\nFor best performance, keep total color groups under 500.")
         print("-"*60)
         
+        # Initialize scheme_map at the beginning so it's available for both tag and file selections
+        scheme_map = None
+        
         # Ask if user wants to include tags
         include_tags = True
         tag_level = 0
@@ -783,7 +786,39 @@ class TagAnalyzer:
                     except ValueError:
                         print("Please enter a valid number")
                 
-                # Get file pattern color scheme (reuse scheme_map from above)
+                # Get file pattern color scheme
+                try:
+                    from color_previews import format_color_scheme_menu, get_scheme_map, supports_256_colors, format_color_scheme_menu_simple
+                    
+                    if supports_256_colors():
+                        print(format_color_scheme_menu())
+                    else:
+                        print(format_color_scheme_menu_simple())
+                        
+                    scheme_map = get_scheme_map()
+                except ImportError:
+                    # Fallback if color_previews module is not available
+                    print("\nAvailable color schemes:")
+                    print("  1. rainbow       - Full spectrum rainbow")
+                    print("  2. terrain       - Green valleys -> Brown mountains -> White peaks")
+                    print("  3. ocean         - Deep blue -> Light blue -> Aqua")
+                    print("  4. sunset        - Purple -> Orange -> Yellow")
+                    print("  5. forest        - Dark green -> Light green -> Yellow")
+                    print("  6. desert        - Brown -> Tan -> Light yellow")
+                    print("  7. arctic        - Dark blue -> Light blue -> White")
+                    print("  8. lava          - Black -> Red -> Orange -> Yellow")
+                    print("  9. viridis       - Modern perceptual: Purple -> Blue -> Green -> Yellow")
+                    print(" 10. turbo         - Improved rainbow: Blue -> Green -> Yellow -> Red")
+                    print(" 11. hsl           - Smooth HSL gradient (0° to 360°)")
+                    print(" 12. hsl_inverted  - Inverted HSL gradient (360° to 0°)")
+                    
+                    scheme_map = {
+                        '1': 'rainbow', '2': 'terrain', '3': 'ocean', 
+                        '4': 'sunset', '5': 'forest', '6': 'desert', 
+                        '7': 'arctic', '8': 'lava', '9': 'viridis', '10': 'turbo',
+                        '11': 'hsl', '12': 'hsl_inverted'
+                    }
+                
                 while True:
                     response = input("\nSelect FILE PATTERN color scheme (1-12, or press Enter for sunset): ").strip()
                     if not response:
