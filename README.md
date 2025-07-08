@@ -130,15 +130,20 @@ To use with Obsidian:
 
 ## Understanding Water Levels
 
-Water levels determine which tags/patterns get colored in your graph:
+Water levels determine which tags/patterns get colored in your graph. The concept fits naturally with the statistical log(n) distribution of tag frequencies - in real-world data, you typically have a few very common tags and a long tail of less frequent ones.
+
 - **Higher water level** = Fewer items colored (only most frequent)
 - **Lower water level** = More items colored (including less frequent)
 - **Default: 30** = Shows items with 30+ occurrences
 
-For example, with 3,749 total tags:
-- Water level 100 → Shows ~26 most important tags
-- Water level 30 → Shows ~308 important tags
-- Water level 10 → Shows ~1,272 somewhat important tags
+This threshold aligns with the natural break point in a log distribution where the rate of change decreases significantly.
+
+For example, with 3,749 total tags following a typical log distribution:
+- Water level 100 → Shows ~26 most important tags (the peak)
+- Water level 30 → Shows ~308 important tags (the sweet spot)
+- Water level 10 → Shows ~1,272 somewhat important tags (includes the tail)
+
+The default of 30 captures the "head" of the distribution - the tags that appear frequently enough to be meaningful patterns rather than noise.
 
 ## Project Structure
 
