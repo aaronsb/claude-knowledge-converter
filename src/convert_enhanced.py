@@ -14,6 +14,7 @@ import string
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from tag_analyzer import TagAnalyzer
 
 # Download required NLTK data
 try:
@@ -189,7 +190,7 @@ def get_title_from_markdown(text: str, default: str = "content") -> str:
 def save_markdown_content(content: str, base_path: Path, filename: str = None, 
                          conversation_title: str = None, keywords: List[str] = None,
                          date_info: Dict[str, str] = None, uuid_short: str = None,
-                         conversation_tag: str = None) -> Optional[Path]:
+                         conversation_tag: str = None, tag_analyzer: TagAnalyzer = None) -> Optional[Path]:
     """Save markdown content to a .md file with enhanced metadata"""
     if not content or not detect_markdown_content(content):
         return None
@@ -228,10 +229,15 @@ def save_markdown_content(content: str, base_path: Path, filename: str = None,
     # Add conversation tag first for grouping
     if conversation_tag:
         hashtags.append(f'#{conversation_tag}')
+        if tag_analyzer:
+            tag_analyzer.add_tag(conversation_tag, 'conversation')
     
     # Add keyword hashtags
     if keywords:
-        hashtags.extend(f'#{tag}' for tag in keywords)
+        for tag in keywords:
+            hashtags.append(f'#{tag}')
+            if tag_analyzer:
+                tag_analyzer.add_tag(tag, 'keyword')
     
     if hashtags:
         enhanced_content += f"\n\n---\n\n{' '.join(hashtags)}"
@@ -329,7 +335,8 @@ def create_conversation_structure(conversation: Dict[str, Any], base_path: Path)
     return conv_folder, conv_title, date_info
 
 def save_conversation(conversation: Dict[str, Any], conv_folder: Path, conv_title: str, 
-                     date_info: Dict[str, str], keyword_extractor: KeywordExtractor):
+                     date_info: Dict[str, str], keyword_extractor: KeywordExtractor,
+                     tag_analyzer: TagAnalyzer = None):
     """Save conversation data to folder structure with markdown extraction and keywords"""
     # Create a unique conversation tag by combining title and short UUID
     conv_tag = f"conv-{conv_title.replace(' ', '-').lower()}-{conversation['uuid'][:8]}"
@@ -403,7 +410,7 @@ def save_conversation(conversation: Dict[str, Any], conv_folder: Path, conv_titl
             md_path = save_markdown_content(text, messages_folder, md_filename_base, 
                                           msg_title, conversation_keywords, 
                                           date_info, conversation['uuid'][:8],
-                                          conv_tag)
+                                          conv_tag, tag_analyzer)
             if md_path:
                 msg_data['markdown_file'] = md_path.name
                 markdown_files.append(md_path.name)
@@ -419,7 +426,7 @@ def save_conversation(conversation: Dict[str, Any], conv_folder: Path, conv_titl
                     md_path = save_markdown_content(content_text, messages_folder, md_filename_content,
                                                   content_title, conversation_keywords,
                                                   date_info, conversation['uuid'][:8],
-                                                  conv_tag)
+                                                  conv_tag, tag_analyzer)
                     if md_path:
                         markdown_files.append(md_path.name)
                         metadata['has_markdown_content'] = True
@@ -445,7 +452,8 @@ def save_conversation(conversation: Dict[str, Any], conv_folder: Path, conv_titl
     with open(conv_folder / 'metadata.json', 'w') as f:
         json.dump(metadata, f, indent=2, cls=DecimalEncoder)
 
-def save_project(project: Dict[str, Any], projects_folder: Path, keyword_extractor: KeywordExtractor):
+def save_project(project: Dict[str, Any], projects_folder: Path, keyword_extractor: KeywordExtractor,
+                tag_analyzer: TagAnalyzer = None):
     """Save project data to folder structure with markdown extraction and keywords"""
     project_name = sanitize_filename(project.get('name', f"project_{project['uuid'][:8]}"))
     project_folder = projects_folder / f"{project_name}_{project['uuid'][:8]}"
@@ -510,7 +518,8 @@ def save_project(project: Dict[str, Any], projects_folder: Path, keyword_extract
     if project.get('description') and detect_markdown_content(project['description']):
         md_path = save_markdown_content(project['description'], project_folder, 
                                       'project_description', f"{project_title} - Description",
-                                      project_keywords, date_info, project['uuid'][:8])
+                                      project_keywords, date_info, project['uuid'][:8], 
+                                      None, tag_analyzer)
         if md_path:
             markdown_files.append(md_path.name)
             metadata['has_markdown_content'] = True
@@ -519,7 +528,8 @@ def save_project(project: Dict[str, Any], projects_folder: Path, keyword_extract
     if project.get('prompt_template') and detect_markdown_content(project['prompt_template']):
         md_path = save_markdown_content(project['prompt_template'], project_folder, 
                                       'prompt_template', f"{project_title} - Prompt Template",
-                                      project_keywords, date_info, project['uuid'][:8])
+                                      project_keywords, date_info, project['uuid'][:8],
+                                      None, tag_analyzer)
         if md_path:
             markdown_files.append(md_path.name)
             metadata['has_markdown_content'] = True
@@ -539,7 +549,8 @@ def save_project(project: Dict[str, Any], projects_folder: Path, keyword_extract
                 # Save as markdown file
                 doc_title = f"{project_title} - {humanize_title(doc_name)}"
                 md_path = save_markdown_content(content, docs_folder, doc_name, 
-                                              doc_title, project_keywords, date_info, project['uuid'][:8])
+                                              doc_title, project_keywords, date_info, project['uuid'][:8],
+                                              None, tag_analyzer)
                 if md_path:
                     markdown_files.append(f"documents/{md_path.name}")
                     metadata['has_markdown_content'] = True
@@ -554,7 +565,8 @@ def save_project(project: Dict[str, Any], projects_folder: Path, keyword_extract
     with open(project_folder / 'metadata.json', 'w') as f:
         json.dump(metadata, f, indent=2, cls=DecimalEncoder)
 
-def convert_conversations(input_file: str, output_base: Path, keyword_extractor: KeywordExtractor):
+def convert_conversations(input_file: str, output_base: Path, keyword_extractor: KeywordExtractor,
+                         tag_analyzer: TagAnalyzer = None):
     """Convert conversations.json to folder structure with markdown extraction"""
     print(f"\nConverting {input_file} with enhanced markdown extraction...")
     conversations_folder = output_base / 'conversations'
@@ -569,7 +581,7 @@ def convert_conversations(input_file: str, output_base: Path, keyword_extractor:
         for conversation in parser:
             try:
                 conv_folder, conv_title, date_info = create_conversation_structure(conversation, conversations_folder)
-                save_conversation(conversation, conv_folder, conv_title, date_info, keyword_extractor)
+                save_conversation(conversation, conv_folder, conv_title, date_info, keyword_extractor, tag_analyzer)
                 count += 1
                 
                 # Check if this conversation had markdown
@@ -591,7 +603,8 @@ def convert_conversations(input_file: str, output_base: Path, keyword_extractor:
     # Create index file
     create_index(conversations_folder, 'conversations')
 
-def convert_projects(input_file: str, output_base: Path, keyword_extractor: KeywordExtractor):
+def convert_projects(input_file: str, output_base: Path, keyword_extractor: KeywordExtractor,
+                    tag_analyzer: TagAnalyzer = None):
     """Convert projects.json to folder structure with markdown extraction"""
     print(f"\nConverting {input_file} with enhanced markdown extraction...")
     projects_folder = output_base / 'projects'
@@ -604,7 +617,7 @@ def convert_projects(input_file: str, output_base: Path, keyword_extractor: Keyw
     
     for project in projects:
         try:
-            save_project(project, projects_folder, keyword_extractor)
+            save_project(project, projects_folder, keyword_extractor, tag_analyzer)
             
             # Check if this project had markdown
             project_name = sanitize_filename(project.get('name', f"project_{project['uuid'][:8]}"))
@@ -698,8 +711,9 @@ def main():
     output_base = Path(output_dir)
     output_base.mkdir(exist_ok=True)
     
-    # Initialize keyword extractor
+    # Initialize keyword extractor and tag analyzer
     keyword_extractor = KeywordExtractor()
+    tag_analyzer = TagAnalyzer()
     
     # Define input directory (relative to src/)
     input_dir = Path('../input')
@@ -716,12 +730,12 @@ def main():
     # Convert conversations
     conversations_file = input_dir / 'conversations.json'
     if conversations_file.exists():
-        convert_conversations(str(conversations_file), output_base, keyword_extractor)
+        convert_conversations(str(conversations_file), output_base, keyword_extractor, tag_analyzer)
     
     # Convert projects  
     projects_file = input_dir / 'projects.json'
     if projects_file.exists():
-        convert_projects(str(projects_file), output_base, keyword_extractor)
+        convert_projects(str(projects_file), output_base, keyword_extractor, tag_analyzer)
     
     # Create summary
     summary = {
@@ -768,6 +782,32 @@ def main():
     print(f"  - Human-readable titles throughout")
     print(f"  - Code blocks saved as separate files")
     print(f"  - Keywords indexed for search and discovery")
+    
+    # Run tag analysis and generate Obsidian config
+    print("\n" + "="*60)
+    print("Generating Obsidian graph configuration...")
+    print("="*60)
+    
+    # Interactive water level adjustment
+    water_level = tag_analyzer.interactive_water_level_adjustment()
+    
+    # Generate Obsidian config files
+    print("\nCreating Obsidian configuration...")
+    tag_analyzer.create_obsidian_config(output_base, water_level)
+    
+    # Save analysis report
+    report_file = tag_analyzer.save_analysis_report(output_base, water_level)
+    print(f"Tag analysis report saved to: {report_file}")
+    
+    print("\n" + "="*60)
+    print("CONVERSION COMPLETE!")
+    print("="*60)
+    print(f"Your knowledge base is ready in: {output_base}")
+    print("\nTo use with Obsidian:")
+    print("1. Open Obsidian")
+    print("2. Create new vault or open existing vault")
+    print("3. Copy contents of output folder to your vault")
+    print("4. Open Graph View to see your color-coded knowledge network!")
 
 if __name__ == "__main__":
     main()

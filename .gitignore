@@ -7,6 +7,7 @@ __pycache__/
 .Python
 env/
 *.egg-info/
+src/__pycache__/
 
 # Input files (users should add their own)
 input/*
