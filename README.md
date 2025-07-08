@@ -1,8 +1,8 @@
 # Claude History Converter
 
-Convert your Claude conversation history into an organized, searchable collection of markdown files.
-
 ![Obsidian Graph View of Claude Conversations](claude-data-graph.png)
+
+Convert your Claude conversation history into an organized, searchable collection of markdown files.
 
 ## Features
 
