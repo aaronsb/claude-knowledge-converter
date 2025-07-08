@@ -67,7 +67,7 @@ class TagAnalyzer:
             
         return filtered
     
-    def calculate_water_level(self, percentile: float = 0.8) -> int:
+    def calculate_water_level(self, percentile: float = 0.95) -> int:
         """Calculate suggested water level based on tag distribution"""
         filtered_tags = self.get_filtered_tags(min_count=1)
         
@@ -83,7 +83,7 @@ class TagAnalyzer:
             
         return counts[index] if index >= 0 else counts[0]
     
-    def generate_color_groups(self, water_level: int = None, max_groups: int = 50) -> List[Dict]:
+    def generate_color_groups(self, water_level: int = None, max_groups: int = 200) -> List[Dict]:
         """Generate color groups for Obsidian graph"""
         filtered_tags = self.get_filtered_tags()
         
@@ -94,8 +94,20 @@ class TagAnalyzer:
         above_water = {tag: count for tag, count in filtered_tags.items() 
                       if count >= water_level}
         
-        # Sort by count (descending)
+        # Sort tags with conversation tags getting priority
+        # First sort by count, then separate conversation tags
         sorted_tags = sorted(above_water.items(), key=lambda x: x[1], reverse=True)
+        
+        # Separate conversation tags and keyword tags
+        conv_tags = [(tag, count) for tag, count in sorted_tags if tag in self.conversation_tags]
+        keyword_tags = [(tag, count) for tag, count in sorted_tags if tag not in self.conversation_tags]
+        
+        # Combine with conversation tags first (they're unique per conversation)
+        # Take top conversation tags and top keyword tags
+        max_conv_tags = min(len(conv_tags), max_groups // 2)
+        max_keyword_tags = max_groups - max_conv_tags
+        
+        sorted_tags = conv_tags[:max_conv_tags] + keyword_tags[:max_keyword_tags]
         
         # Limit to max groups
         sorted_tags = sorted_tags[:max_groups]
@@ -222,10 +234,20 @@ class TagAnalyzer:
         print(f"  Median count: {median_count}")
         print(f"  Maximum count: {max_count}")
         print(f"\nSuggested water level: {suggested_level}")
-        print(f"Tags above water level: {len([c for c in filtered_tags.values() if c >= suggested_level])}")
+        tags_above_suggested = len([c for c in filtered_tags.values() if c >= suggested_level])
+        print(f"Tags above water level: {tags_above_suggested}")
+        
+        # Recommend higher water level if too many tags
+        if tags_above_suggested > 500:
+            recommended_level = max(10, median_count)
+            tags_at_recommended = len([c for c in filtered_tags.values() if c >= recommended_level])
+            print(f"\n⚠️  WARNING: {tags_above_suggested} tags may slow down Obsidian!")
+            print(f"Recommended water level: {recommended_level} (would show {tags_at_recommended} tags)")
+        
         print("\nThe water level determines which tags appear in the graph.")
         print("Higher water level = fewer tags (only most frequent)")
         print("Lower water level = more tags (including less frequent)")
+        print("\nFor best performance, keep total tags under 500.")
         
         while True:
             response = input(f"\nEnter water level (or press Enter for {suggested_level}): ").strip()
