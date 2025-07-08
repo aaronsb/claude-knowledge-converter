@@ -2,6 +2,8 @@
 
 Convert your Claude conversation history into an organized, searchable collection of markdown files.
 
+![Obsidian Graph View of Claude Conversations](claude-data-graph.png)
+
 ## Features
 
 - 📁 **Organized Structure** - Conversations organized by date (year/month/day)
