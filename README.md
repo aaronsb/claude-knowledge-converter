@@ -12,6 +12,8 @@ Convert your Claude conversation history into an organized, searchable collectio
 - 💻 **Code Extraction** - Code blocks saved as separate files with proper extensions
 - 🔍 **Searchable Index** - JSON index files with keywords for easy discovery
 - 📖 **Context-Rich Titles** - Each markdown file includes full conversation context
+- 🎨 **Obsidian Graph Support** - Creates color-coded knowledge graphs with dual-layer grouping
+- 🏷️ **Tag & File Pattern Analysis** - Interactive configuration for graph visualization
 
 ## Quick Start
 
@@ -37,14 +39,106 @@ Convert your Claude conversation history into an organized, searchable collectio
    # Show help and usage information
    ./convert_claude_history.sh
    
-   # Convert with default directory name
-   ./convert_claude_history.sh claude_history
-   
-   # Convert with custom directory name
+   # Convert with a custom directory name
    ./convert_claude_history.sh my_claude_archive
    ```
 
-That's it! Your converted history will be in the `output/claude_history/` directory (or `output/your_custom_name/` if you specify one).
+The script will guide you through an interactive process to configure your conversion.
+
+## Interactive Walkthrough
+
+When you run `./convert_claude_history.sh my_claude_archive`, here's what happens:
+
+### 1. File Detection
+The script checks for your Claude export files and shows their sizes:
+```
+Found export files:
+  ✓ input/conversations.json (82M)
+  ✓ input/projects.json (1.1M)
+  ✓ input/users.json (150)
+```
+
+### 2. Confirmation Prompt
+You'll be asked to confirm before proceeding:
+```
+This will:
+  1. Set up a Python virtual environment (if needed)
+  2. Install required dependencies
+  3. Process your Claude export files from input/
+  4. Create organized markdown files in 'output/my_claude_archive/'
+
+Do you want to proceed? (y/N):
+```
+
+### 3. Processing Phase
+The script will:
+- Create a Python virtual environment
+- Install required packages (ijson, scikit-learn, nltk)
+- Download language processing data
+- Convert your conversations to markdown
+
+### 4. Tag Analysis
+After processing, you'll see comprehensive statistics:
+```
+TAG AND FILE PATTERN ANALYSIS COMPLETE
+============================================================
+
+TAG STATISTICS:
+Total unique tags found: 3749
+Tags after exclusion filter: 3442
+...
+```
+
+### 5. Interactive Configuration
+You'll be prompted to configure color groups for Obsidian:
+
+**Tag Configuration:**
+```
+Include TAG color groups? (Y/n): y
+Enter TAG water level (or press Enter for 30): 30
+```
+
+Then you'll see a beautiful color scheme menu with ANSI previews:
+```
+Available color schemes (with previews):
+  1. rainbow       ████████████ - Full spectrum rainbow
+  2. terrain       ████████████ - Green valleys → Brown mountains → White peaks
+  3. ocean         ████████████ - Deep blue → Light blue → Aqua
+  ...
+Select TAG color scheme (1-12, or press Enter for ocean): 3
+```
+
+**File Pattern Configuration:**
+```
+Include FILE PATTERN color groups? (Y/n): y
+Enter FILE PATTERN water level (or press Enter for 30): 30
+Select FILE PATTERN color scheme (1-12, or press Enter for sunset): 4
+```
+
+### 6. Completion
+Finally, you'll see:
+```
+CONVERSION COMPLETE!
+Your knowledge base is ready in: ../output/my_claude_archive
+
+To use with Obsidian:
+1. Open Obsidian
+2. Create new vault or open existing vault
+3. Copy contents of output folder to your vault
+4. Open Graph View to see your color-coded knowledge network!
+```
+
+## Understanding Water Levels
+
+Water levels determine which tags/patterns get colored in your graph:
+- **Higher water level** = Fewer items colored (only most frequent)
+- **Lower water level** = More items colored (including less frequent)
+- **Default: 30** = Shows items with 30+ occurrences
+
+For example, with 3,749 total tags:
+- Water level 100 → Shows ~26 most important tags
+- Water level 30 → Shows ~308 important tags
+- Water level 10 → Shows ~1,272 somewhat important tags
 
 ## Project Structure
 
@@ -59,7 +153,12 @@ claude-knowledge-converter/
 ├── output/                      # Converted files will appear here
 │   └── claude_history/          # Your conversion output
 └── src/                         # Source code
-    └── convert_enhanced.py      # The conversion engine
+    ├── convert_enhanced.py      # The conversion engine
+    ├── tag_analyzer.py          # Tag and file pattern analysis
+    ├── color_previews.py        # ANSI color scheme previews
+    ├── analyze_tags.py          # Comprehensive tag analysis tool
+    ├── tag_exclusions.txt       # Common words to exclude from tags
+    └── obsidian_templates/      # Obsidian configuration templates
 ```
 
 ## What You Get
@@ -83,7 +182,10 @@ output/claude_history/
 │       └── documents/
 ├── conversations_index.json
 ├── projects_index.json
-└── users.json
+├── users.json
+├── tag_analysis_report.json
+└── .obsidian/                   # Obsidian configuration
+    └── graph.json               # Color-coded graph settings
 ```
 
 ## Requirements
