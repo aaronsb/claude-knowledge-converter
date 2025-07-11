@@ -1,8 +1,19 @@
-# AI Conversation History Converter
+# LLM Chat Knowledge Converter 🧠
 
 ![Obsidian Graph View of Claude Conversations](claude-data-graph.png)
 
-Convert your AI conversation history (Claude or ChatGPT) into an organized, searchable collection of markdown files.
+**Transform your AI conversations into a personal knowledge graph.**
+
+This toolkit converts LLM chat exports (Claude, ChatGPT) into an interconnected knowledge base you can explore, search, and build upon. Your conversations with AI become a living library of insights, code snippets, and ideas - visualized as a knowledge graph in Obsidian.
+
+## Why Use This?
+
+Your conversations with AI assistants contain valuable knowledge - solved problems, generated code, explored ideas, and creative outputs. This tool helps you:
+
+- **Preserve Knowledge**: Convert ephemeral chat histories into permanent, searchable notes
+- **Discover Patterns**: Visualize connections between conversations as an interactive graph
+- **Build on Past Work**: Quickly find and reference previous solutions and discussions
+- **Create a Second Brain**: Turn AI interactions into a queryable knowledge repository
 
 ## Features
 
