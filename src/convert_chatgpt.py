@@ -6,6 +6,7 @@ ChatGPT conversation converter that outputs the same format as Claude converter.
 import json
 import os
 import sys
+import shutil
 from datetime import datetime
 from pathlib import Path
 import ijson
@@ -30,8 +31,9 @@ from converter_base import (
 class ChatGPTConverter:
     """Convert ChatGPT export to Claude converter format"""
     
-    def __init__(self, output_dir: Path):
+    def __init__(self, output_dir: Path, input_dir: Path = None):
         self.output_dir = output_dir
+        self.input_dir = input_dir or Path('input')
         self.keyword_extractor = KeywordExtractor()
         self.tag_analyzer = TagAnalyzer()  # Initialize for tag analysis
         
@@ -179,11 +181,13 @@ class ChatGPTConverter:
         # Handle attachments if any
         if 'attachments' in metadata:
             for att in metadata['attachments']:
-                message['files'].append({
+                file_info = {
                     'file_name': att.get('name', 'Unnamed'),
                     'file_type': att.get('mime_type', 'unknown'),
-                    'file_size': att.get('size', 0)
-                })
+                    'file_size': att.get('size', 0),
+                    'file_id': att.get('id', '')  # Store file ID for copying
+                }
+                message['files'].append(file_info)
         
         return message
     
@@ -260,6 +264,91 @@ class ChatGPTConverter:
             self.tag_analyzer.add_tag(conv_tag, 'conversation')
             for keyword in conversation_keywords:
                 self.tag_analyzer.add_tag(keyword, 'keyword')
+                
+        # Copy images if any exist in the conversation
+        self._copy_conversation_images(conversation, conv_folder)
+    
+    def _copy_conversation_images(self, conversation: Dict[str, Any], conv_folder: Path):
+        """Copy images referenced in the conversation to the output folder"""
+        images_copied = 0
+        images_folder = None
+        
+        for message in conversation.get('chat_messages', []):
+            # Check for file references in the message text
+            if message.get('text'):
+                # Find file references like file-service://file-XYZ or just file-XYZ
+                import re
+                file_refs = re.findall(r'file-[a-zA-Z0-9\-]+', message['text'])
+                
+                for file_ref in file_refs:
+                    # Try to find the file in various locations
+                    possible_files = [
+                        self.input_dir / f"{file_ref}.png",
+                        self.input_dir / f"{file_ref}.jpg", 
+                        self.input_dir / f"{file_ref}.webp",
+                        self.input_dir / f"{file_ref}-*.png",
+                        self.input_dir / f"{file_ref}-*.jpg",
+                        self.input_dir / f"{file_ref}-*.webp",
+                        self.input_dir / "dalle-generations" / f"{file_ref}-*.webp",
+                        self.input_dir / "user-*" / f"{file_ref}-*.png"
+                    ]
+                    
+                    file_found = None
+                    for pattern in possible_files:
+                        if '*' in str(pattern):
+                            # Use glob for wildcard patterns
+                            matches = list(self.input_dir.glob(str(pattern.relative_to(self.input_dir))))
+                            if matches:
+                                file_found = matches[0]
+                                break
+                        elif pattern.exists():
+                            file_found = pattern
+                            break
+                    
+                    if file_found:
+                        # Create images folder if needed
+                        if images_folder is None:
+                            images_folder = conv_folder / 'images'
+                            images_folder.mkdir(exist_ok=True)
+                        
+                        # Copy the file
+                        dest_file = images_folder / file_found.name
+                        shutil.copy2(file_found, dest_file)
+                        images_copied += 1
+                        
+                        # Update the message text to use local path
+                        relative_path = f"images/{file_found.name}"
+                        message['text'] = message['text'].replace(f"file-service://{file_ref}", relative_path)
+                        message['text'] = message['text'].replace(file_ref, relative_path)
+            
+            # Also check for files in the message metadata
+            for file_info in message.get('files', []):
+                file_id = file_info.get('file_id', '')
+                if file_id:
+                    # Similar search logic for metadata files
+                    file_patterns = [
+                        self.input_dir / f"{file_id}*",
+                        self.input_dir / "dalle-generations" / f"{file_id}*",
+                        self.input_dir / "user-*" / f"*{file_id}*"
+                    ]
+                    
+                    for pattern in file_patterns:
+                        matches = list(self.input_dir.glob(str(pattern.relative_to(self.input_dir))))
+                        if matches:
+                            if images_folder is None:
+                                images_folder = conv_folder / 'images'
+                                images_folder.mkdir(exist_ok=True)
+                            
+                            dest_file = images_folder / matches[0].name
+                            shutil.copy2(matches[0], dest_file)
+                            images_copied += 1
+                            
+                            # Update file info with local path
+                            file_info['local_path'] = f"images/{matches[0].name}"
+                            break
+        
+        if images_copied > 0:
+            print(f"  Copied {images_copied} images to {conv_folder.name}/images/")
     
     def convert(self, input_file: Path):
         """Main conversion method"""
@@ -406,8 +495,11 @@ def main():
     else:
         output_dir = Path('claude_history_enhanced')
     
+    # Determine input directory (parent of conversations.json)
+    input_dir = input_file.parent
+    
     # Create converter and run
-    converter = ChatGPTConverter(output_dir)
+    converter = ChatGPTConverter(output_dir, input_dir)
     converter.convert(input_file)
 
 
