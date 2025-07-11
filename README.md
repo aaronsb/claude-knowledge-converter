@@ -59,9 +59,14 @@ Your conversations with AI assistants contain valuable knowledge - solved proble
 ### For ChatGPT Users
 
 1. **Export your ChatGPT data**
-   - Go to https://chatgpt.com/gpts/mine
-   - Click on your profile → Data controls → Export data
-   - Download and extract the ZIP file
+   - Sign in to ChatGPT
+   - Click your profile icon (top right corner)
+   - Click Settings → Data controls
+   - Under "Export data" click Export
+   - Click "Confirm export" on the confirmation screen
+   - Check your email (link expires after 24 hours)
+   - Click "Download data export" to get the ZIP file
+   - Extract the ZIP file
 
 2. **Clone this repository**
    ```bash
