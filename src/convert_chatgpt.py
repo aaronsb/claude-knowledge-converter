@@ -33,7 +33,7 @@ class ChatGPTConverter:
     def __init__(self, output_dir: Path):
         self.output_dir = output_dir
         self.keyword_extractor = KeywordExtractor()
-        self.tag_analyzer = None  # Will be initialized later if needed
+        self.tag_analyzer = TagAnalyzer()  # Initialize for tag analysis
         
     def parse_export(self, file_path: Path) -> List[Dict[str, Any]]:
         """Parse ChatGPT conversations.json and convert to Claude format"""
@@ -363,6 +363,31 @@ class ChatGPTConverter:
         print(f"\nConversion complete!")
         print(f"Output directory: {self.output_dir}")
         print(f"Total conversations: {len(conversations)}")
+        
+        # Run tag analysis and generate Obsidian config
+        print("\n" + "="*60)
+        print("Generating Obsidian graph configuration...")
+        print("="*60)
+        
+        # Scan all markdown files for complete tag analysis
+        self.tag_analyzer.scan_markdown_files_for_tags(self.output_dir)
+        
+        # Interactive water level adjustment for both tags and file patterns
+        tag_water_level, file_water_level, tag_color_scheme, file_color_scheme = self.tag_analyzer.interactive_water_level_adjustment()
+        
+        # Generate Obsidian config files with dual grouping
+        print("\nCreating Obsidian configuration with dual-layer grouping...")
+        print(f"Using {tag_color_scheme} colors for tags and {file_color_scheme} colors for file patterns")
+        self.tag_analyzer.create_obsidian_config(self.output_dir, tag_water_level, file_water_level, 
+                                              tag_color_scheme, file_color_scheme)
+        
+        # Save analysis report
+        report_file = self.tag_analyzer.save_analysis_report(self.output_dir, tag_water_level, file_water_level,
+                                                           tag_color_scheme, file_color_scheme)
+        print(f"Tag analysis report saved to: {report_file}")
+        
+        print("\n" + "="*60)
+        print("CONVERSION COMPLETE!")
 
 
 def main():
