@@ -1,8 +1,8 @@
-# Claude History Converter
+# AI Conversation History Converter
 
 ![Obsidian Graph View of Claude Conversations](claude-data-graph.png)
 
-Convert your Claude conversation history into an organized, searchable collection of markdown files.
+Convert your AI conversation history (Claude or ChatGPT) into an organized, searchable collection of markdown files.
 
 ## Features
 
@@ -16,6 +16,8 @@ Convert your Claude conversation history into an organized, searchable collectio
 - 🏷️ **Tag & File Pattern Analysis** - Interactive configuration for graph visualization
 
 ## Quick Start
+
+### For Claude Users
 
 1. **Export your Claude data**
    - Go to https://claude.ai/settings
@@ -43,7 +45,34 @@ Convert your Claude conversation history into an organized, searchable collectio
    ./convert_claude_history.sh my_claude_archive
    ```
 
-The script will guide you through an interactive process to configure your conversion.
+### For ChatGPT Users
+
+1. **Export your ChatGPT data**
+   - Go to https://chatgpt.com/gpts/mine
+   - Click on your profile → Data controls → Export data
+   - Download and extract the ZIP file
+
+2. **Clone this repository**
+   ```bash
+   git clone https://github.com/aaronsb/claude-knowledge-converter.git
+   cd claude-knowledge-converter
+   ```
+
+3. **Copy your ChatGPT conversations.json to the input directory**
+   ```bash
+   cp ~/Downloads/conversations.json input/
+   ```
+
+4. **Run the ChatGPT converter**
+   ```bash
+   # Show help and usage information
+   ./convert_chatgpt_history.sh
+   
+   # Convert with a custom directory name
+   ./convert_chatgpt_history.sh my_chatgpt_archive
+   ```
+
+Both converters will guide you through an interactive process to configure your conversion.
 
 ## Interactive Walkthrough
 
@@ -149,16 +178,19 @@ The default of 30 captures the "head" of the distribution - the tags that appear
 
 ```
 claude-knowledge-converter/
-├── convert_claude_history.sh    # Main conversion script
+├── convert_claude_history.sh    # Claude conversion script
+├── convert_chatgpt_history.sh   # ChatGPT conversion script
 ├── README.md                    # This file
-├── input/                       # Place your Claude export files here
-│   ├── conversations.json
-│   ├── projects.json
-│   └── users.json
+├── input/                       # Place your export files here
+│   ├── conversations.json       # From Claude or ChatGPT
+│   ├── projects.json           # Claude only
+│   └── users.json              # Claude only
 ├── output/                      # Converted files will appear here
-│   └── claude_history/          # Your conversion output
+│   └── your_output_name/        # Your conversion output
 └── src/                         # Source code
-    ├── convert_enhanced.py      # The conversion engine
+    ├── convert_enhanced.py      # Claude conversion engine
+    ├── convert_chatgpt.py       # ChatGPT conversion engine
+    ├── converter_base.py        # Shared converter functionality
     ├── tag_analyzer.py          # Tag and file pattern analysis
     ├── color_previews.py        # ANSI color scheme previews
     ├── analyze_tags.py          # Comprehensive tag analysis tool
@@ -168,8 +200,10 @@ claude-knowledge-converter/
 
 ## What You Get
 
+Both Claude and ChatGPT converters produce the same output structure for compatibility:
+
 ```
-output/claude_history/
+output/your_output_name/
 ├── conversations/
 │   └── 2024/
 │       └── 03-March/
