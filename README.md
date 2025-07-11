@@ -25,8 +25,8 @@ Convert your AI conversation history (Claude or ChatGPT) into an organized, sear
 
 2. **Clone this repository**
    ```bash
-   git clone https://github.com/aaronsb/claude-knowledge-converter.git
-   cd claude-knowledge-converter
+   git clone https://github.com/aaronsb/llmchat-knowledge-converter.git
+   cd llmchat-knowledge-converter
    ```
 
 3. **Copy your Claude export files to the input directory**
@@ -54,8 +54,8 @@ Convert your AI conversation history (Claude or ChatGPT) into an organized, sear
 
 2. **Clone this repository**
    ```bash
-   git clone https://github.com/aaronsb/claude-knowledge-converter.git
-   cd claude-knowledge-converter
+   git clone https://github.com/aaronsb/llmchat-knowledge-converter.git
+   cd llmchat-knowledge-converter
    ```
 
 3. **Copy your ChatGPT conversations.json to the input directory**
@@ -177,7 +177,7 @@ The default of 30 captures the "head" of the distribution - the tags that appear
 ## Project Structure
 
 ```
-claude-knowledge-converter/
+llmchat-knowledge-converter/
 ├── convert_claude_history.sh    # Claude conversion script
 ├── convert_chatgpt_history.sh   # ChatGPT conversion script
 ├── README.md                    # This file
